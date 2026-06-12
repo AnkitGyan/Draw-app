@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import { Middleware } from "./middleware";
 import { JWT_SECRET } from "@repo/backend-common/config";
 import { CreateRoomSchema, CreateUserSchema, SigninSchema } from "@repo/common/types";
+import { Client } from "@repo/db/client";
 
 const app = express();
 
