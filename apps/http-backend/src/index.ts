@@ -10,8 +10,7 @@ const app = express();
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Hello, World!");
-}
-);
+});
 
 app.post("/signup", (req: Request, res: Response)=>{
   const data = CreateUserSchema.safeParse(req.body);
