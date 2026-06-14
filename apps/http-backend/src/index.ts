@@ -60,9 +60,14 @@ app.post("/login", (req: Request, res: Response)=>{
       message:"Incorrect Inputs",
     })
   }
-  res.status(2000).json({
-    message: "Login successfull",
-  })
+  try{
+    
+  } catch(e){
+    res.status(400).json({
+      message:"Login failed, Try again with correct crendentials"
+    })
+  }
+
 });
 
 app.post("/room", Middleware, (req: Request, res:Response)=>{
@@ -72,11 +77,11 @@ app.post("/room", Middleware, (req: Request, res:Response)=>{
         message: "Incorrect Inputs"
       })
     }
-    res.status(2000).json({
+    res.status(200).json({
       message: "Room created successfully",
     })
 })
 
 app.listen(8000, () => {
-  console.log("Server is running on port 3000");
+  console.log("Server is running on port 8000");
 });
