@@ -6,6 +6,10 @@ import { JWT_SECRET } from "@repo/backend-common/config";
 import { CreateRoomSchema, CreateUserSchema, SigninSchema } from "@repo/common/types";
 import { Client } from "@repo/db/client";
 
+interface CustomRequest extends Request {
+  user?: string;
+}
+
 const app = express();
 app.use(express.json());
 
@@ -91,17 +95,55 @@ app.post("/login", async (req: Request, res: Response)=>{
 
 });
 
-app.post("/room", Middleware, (req: Request, res:Response)=>{
-    const parsedata = CreateRoomSchema.safeParse(req.body);
-    if(!parsedata.success){
-      return res.json({
-        message: "Incorrect Inputs"
-      })
+app.post("/room", Middleware, async (req: CustomRequest, res: Response) => {
+
+  const parsedata = CreateRoomSchema.safeParse(req.body);
+
+  if (!parsedata.success) {
+    return res.status(400).json({
+      message: "Incorrect Inputs"
+    });
+  }
+
+  try {
+
+    const userId = req.user;
+
+    if (!userId) {
+      return res.status(401).json({
+        message: "Unauthorized"
+      });
     }
-    res.status(200).json({
+
+    const room = await Client.room.create({
+      data: {
+        slug: parsedata.data.name,
+
+        admin: {
+          connect: {
+            id: userId
+          }
+        }
+      }
+    });
+
+    return res.status(201).json({
       message: "Room created successfully",
-    })
-})
+      room
+    });
+
+  } catch (e) {
+
+    console.error(e);
+
+    return res.status(500).json({
+      message: "Some error occurred"
+    });
+
+  }
+
+});
+
 
 app.listen(8000, () => {
   console.log("Server is running on port 8000");
