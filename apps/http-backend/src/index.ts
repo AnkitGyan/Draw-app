@@ -48,12 +48,12 @@ app.post("/signup", async (req: Request, res: Response) => {
     });
   } catch (error) {
     return res.status(500).json({
-      message: "Internal server error"
+      message: "Internal server error",
     });
   }
 });
 
-app.post("/login", (req: Request, res: Response)=>{
+app.post("/login", async (req: Request, res: Response)=>{
   const parsedata = SigninSchema.safeParse(req.body);
   if(!parsedata.success){
     res.json({
@@ -61,6 +61,27 @@ app.post("/login", (req: Request, res: Response)=>{
     })
   }
   try{
+
+    //Todo: compare hashed password first
+    const user = await Client.user.findFirst({
+      where:{
+        email : parsedata.data?.email,
+        password : parsedata.data?.password
+      }
+    })
+
+    if(!user){
+      res.status(403).json({
+        message: "Email or password is incorrect"
+      })
+      return;
+    }
+
+    const token = jwt.sign({userId : user.id}, JWT_SECRET);
+    res.status(201).json({
+      message:"Logged In",
+      token
+    })
     
   } catch(e){
     res.status(400).json({
