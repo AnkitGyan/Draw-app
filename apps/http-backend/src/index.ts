@@ -106,6 +106,20 @@ app.post("/room", Middleware, async (req: CustomRequest, res: Response) => {
   }
 
   try {
+    //is room exist with same name?
+    
+    const isExist = await Client.room.findFirst({
+      where:{
+        slug: parsedata.data?.name,
+      }
+    })
+
+    if(isExist){
+      res.status(301).json({
+        message: "Room is exist with this Name, try with another name"
+      })
+      return;
+    }
 
     const userId = req.user;
 
