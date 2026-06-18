@@ -182,6 +182,39 @@ app.get("/chats/:roomId", async (req: Request, res: Response) => {
   }
 });
 
+app.get("/room/:slug", async (req: Request, res: Response) => {
+  try {
+    const rawSlug = req.params.slug;
+    const slug = Array.isArray(rawSlug) ? rawSlug[0] : rawSlug;
+
+    if (!slug) {
+      return res.status(400).json({
+        message: "Invalid room slug",
+      });
+    }
+
+    const room = await Client.room.findUnique({
+      where: {
+        slug,
+      },
+    });
+
+    if (!room) {
+      return res.status(404).json({
+        message: "Room not found",
+      });
+    }
+
+    return res.status(200).json({
+      roomId: room.id,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Internal server error",
+    });
+  }
+});
+
 
 app.listen(8000, () => {
   console.log("Server is running on port 8000");
