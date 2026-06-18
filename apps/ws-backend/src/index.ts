@@ -1,6 +1,7 @@
 import { WebSocketServer, WebSocket, RawData } from "ws";
 import jwt, { JwtPayload } from "jsonwebtoken";
 import { JWT_SECRET } from "@repo/backend-common/config";
+import { Client } from "@repo/db/client";
 
 const wss = new WebSocketServer({ port: 8080 });
 
@@ -30,7 +31,7 @@ function checkUser(token: string): string | null {
   }
 }
 
-wss.on("connection", (ws, request) => {
+wss.on("connection", async (ws, request) => {
   const url = request.url;
 
   if (!url) {
@@ -63,7 +64,7 @@ wss.on("connection", (ws, request) => {
 
   console.log(`User connected: ${userId}`);
 
-  ws.on("message", (data: RawData) => {
+  ws.on("message", async (data: RawData) => {
     try {
       const parsedData = JSON.parse(data.toString());
 
@@ -105,6 +106,15 @@ wss.on("connection", (ws, request) => {
         case "chat": {
           const roomId = parsedData.roomId;
           const message = parsedData.message;
+
+           const chat = await Client.chat.create({
+              data: {
+                message,
+                roomId,
+                userId: currentUser.userId,
+              },
+            });
+
 
           users.forEach((user) => {
             if (user.rooms.includes(roomId)) {

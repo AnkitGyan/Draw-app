@@ -158,6 +158,30 @@ app.post("/room", Middleware, async (req: CustomRequest, res: Response) => {
 
 });
 
+app.get("/chats/:roomId", async (req: Request, res: Response) => {
+  try {
+    const roomId = Number(req.params.roomId);
+
+    const messages = await Client.chat.findMany({
+      where: {
+        roomId
+      },
+      orderBy: {
+        id: "desc",
+      },
+      take: 50,
+    });
+
+    res.status(200).json({
+      messages,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Something went wrong",
+    });
+  }
+});
+
 
 app.listen(8000, () => {
   console.log("Server is running on port 8000");
