@@ -53,7 +53,8 @@ wss.on("connection", async (ws, request) => {
     ws.close();
     return;
   }
-
+  
+  console.log(userId);
   const currentUser: User = {
     userId,
     rooms: [],
@@ -72,36 +73,52 @@ wss.on("connection", async (ws, request) => {
         case "join_room": {
           const roomId = parsedData.roomId;
 
+          const room = await Client.room.findUnique({
+            where: {
+              id: roomId
+            }
+          });
+
+          if (!room) {
+            ws.send(
+              JSON.stringify({
+                type: "error",
+                message: "Room does not exist"
+              })
+            );
+
+            break;
+        }
+
           if (!currentUser.rooms.includes(roomId)) {
             currentUser.rooms.push(roomId);
           }
-
           ws.send(
             JSON.stringify({
-              type: "joined",
-              roomId,
+              type:"success",
+              message:"joined"
             })
-          );
+          )
 
           break;
         }
 
-        case "leave_room": {
-          const roomId = parsedData.roomId;
+    case "leave_room": {
+      const roomId = parsedData.roomId;
 
-          currentUser.rooms = currentUser.rooms.filter(
-            (room) => room !== roomId
-          );
+      currentUser.rooms = currentUser.rooms.filter(
+        (room) => room !== roomId
+      );
 
-          ws.send(
-            JSON.stringify({
-              type: "left",
-              roomId,
-            })
-          );
+      ws.send(
+        JSON.stringify({
+          type: "left",
+          roomId,
+        })
+      );
 
-          break;
-        }
+      break;
+    }
 
         case "chat": {
           const roomId = parsedData.roomId;
