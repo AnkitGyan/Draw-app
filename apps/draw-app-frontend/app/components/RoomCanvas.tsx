@@ -1,91 +1,103 @@
 "use client";
 
-import { WS_URL } from "@/config";
+import { HTTP_BACKEND, WS_URL } from "@/config";
+import axios from "axios";
 import { useEffect, useState } from "react";
 import { Canvas } from "./Canvas";
 
 export function RoomCanvas({
-  roomId,
+  slug,
 }: {
-  roomId: string;
+  slug: string;
 }) {
   const [socket, setSocket] = useState<WebSocket | null>(null);
+  const [roomId, setRoomId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    async function connect() {
+      try {
+        const token = localStorage.getItem("token");
 
-    if (!token) {
-      alert("Please login first");
-      return;
+        if (!token) {
+          alert("Please login first");
+          return;
+        }
+
+        
+        const roomResponse = await axios.get(
+          `${HTTP_BACKEND}/room/${slug}`
+        );
+
+        const actualRoomId = roomResponse.data.roomId;
+
+        setRoomId(actualRoomId);
+
+        const ws = new WebSocket(
+          `${WS_URL}?token=${token}`
+        );
+
+        ws.onopen = () => {
+          ws.send(
+            JSON.stringify({
+              type: "join_room",
+              roomId: actualRoomId,
+            })
+          );
+
+          setSocket(ws);
+          setLoading(false);
+        };
+
+        ws.onclose = () => {
+          setSocket(null);
+        };
+
+        ws.onerror = () => {
+          setLoading(false);
+        };
+
+        return () => {
+          if (ws.readyState === WebSocket.OPEN) {
+            ws.send(
+              JSON.stringify({
+                type: "leave_room",
+                roomId: actualRoomId,
+              })
+            );
+          }
+
+          ws.close();
+        };
+      } catch (e) {
+        console.log(e);
+        setLoading(false);
+      }
     }
 
-    const ws = new WebSocket(`${WS_URL}?token=${token}`);
-
-    ws.onopen = () => {
-      console.log("Connected to websocket");
-
-      ws.send(
-        JSON.stringify({
-          type: "join_room",
-          roomId: Number(roomId),
-        })
-      );
-
-      setSocket(ws);
-      setLoading(false);
-    };
-
-    ws.onclose = () => {
-      console.log("WebSocket disconnected");
-      setSocket(null);
-    };
-
-    ws.onerror = (err) => {
-      console.log("WebSocket error", err);
-      setLoading(false);
-    };
-
-    return () => {
-      ws.send(
-        JSON.stringify({
-          type: "leave_room",
-          roomId: Number(roomId),
-        })
-      );
-
-      ws.close();
-    };
-  }, [roomId]);
+    connect();
+  }, [slug]);
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="rounded-xl border border-border bg-card p-6 shadow-md">
-          <p className="text-muted-foreground">
-            Connecting to server...
-          </p>
-        </div>
+      <div className="flex min-h-screen items-center justify-center">
+        Connecting...
       </div>
     );
   }
 
-  if (!socket) {
+  if (!socket || roomId === null) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="rounded-xl border border-border bg-card p-6 shadow-md">
-          <p className="text-destructive">
-            Failed to connect to server
-          </p>
-        </div>
+      <div className="flex min-h-screen items-center justify-center">
+        Failed to connect
       </div>
     );
   }
 
   return (
-    <div className="h-screen w-screen bg-background">
-      <Canvas roomId={roomId} socket={socket} />
-    </div>
+    <Canvas
+      socket={socket}
+      roomId={roomId.toString()}
+    />
   );
 }
-

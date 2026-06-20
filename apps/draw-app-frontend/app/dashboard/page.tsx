@@ -35,7 +35,7 @@ export default function Dashboard() {
         }
       );
 
-      router.push(`/room/${createRoomName}`);
+      router.push(`/canvas/${createRoomName}`);
     } catch (e: any) {
       alert(
         e?.response?.data?.message ||
@@ -55,7 +55,7 @@ export default function Dashboard() {
       );
 
       if (res.data.roomId) {
-        router.push(`/room/${joinRoomName}`);
+        router.push(`/canvas/${joinRoomName}`);
       }
     } catch (e: any) {
       alert(

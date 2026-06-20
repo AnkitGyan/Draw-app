@@ -1,72 +1,109 @@
-import { initDraw } from "@/draw";
+"use client";
+
 import { useEffect, useRef, useState } from "react";
-import { IconButton } from "./IconButton";
 import { Circle, Pencil, RectangleHorizontalIcon } from "lucide-react";
+
+import { IconButton } from "./IconButton";
 import { Game } from "@/draw/Game";
 
 export type Tool = "circle" | "rect" | "pencil";
 
 export function Canvas({
-    roomId,
-    socket
+  roomId,
+  socket,
 }: {
-    socket: WebSocket;
-    roomId: string;
+  socket: WebSocket;
+  roomId: string;
 }) {
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    const [game, setGame] = useState<Game>();
-    const [selectedTool, setSelectedTool] = useState<Tool>("circle")
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
-    useEffect(() => {
-        game?.setTool(selectedTool);
-    }, [selectedTool, game]);
+  const [game, setGame] = useState<Game>();
+  const [selectedTool, setSelectedTool] =
+    useState<Tool>("circle");
 
-    useEffect(() => {
+  // Update tool whenever selection changes
+  useEffect(() => {
+    game?.setTool(selectedTool);
+  }, [selectedTool, game]);
 
-        if (canvasRef.current) {
-            const g = new Game(canvasRef.current, roomId, socket);
-            setGame(g);
+  // Initialize canvas/game
+  useEffect(() => {
+    if (!canvasRef.current) return;
 
-            return () => {
-                g.destroy();
-            }
-        }
+    const canvas = canvasRef.current;
 
+    // Set canvas size
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-    }, [canvasRef]);
+    const g = new Game(canvas, roomId, socket);
 
-    return <div style={{
-        height: "100vh",
-        overflow: "hidden"
-    }}>
-        <canvas ref={canvasRef} width={window.innerWidth} height={window.innerHeight}></canvas>
-        <Topbar setSelectedTool={setSelectedTool} selectedTool={selectedTool} />
+    setGame(g);
+
+    // Handle resizing
+    const handleResize = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      g.redraw?.();
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener(
+        "resize",
+        handleResize
+      );
+
+      g.destroy();
+    };
+  }, [roomId, socket]);
+
+  return (
+    <div className="relative h-screen w-screen overflow-hidden bg-background">
+      <canvas
+        ref={canvasRef}
+        className="h-screen w-screen"
+      />
+
+      <Topbar
+        selectedTool={selectedTool}
+        setSelectedTool={setSelectedTool}
+      />
     </div>
+  );
 }
 
-function Topbar({selectedTool, setSelectedTool}: {
-    selectedTool: Tool,
-    setSelectedTool: (s: Tool) => void
+function Topbar({
+  selectedTool,
+  setSelectedTool,
+}: {
+  selectedTool: Tool;
+  setSelectedTool: (tool: Tool) => void;
 }) {
-    return <div style={{
-            position: "fixed",
-            top: 10,
-            left: 10
-        }}>
-            <div className="flex gap-t">
-                <IconButton 
-                    onClick={() => {
-                        setSelectedTool("pencil")
-                    }}
-                    activated={selectedTool === "pencil"}
-                    icon={<Pencil />}
-                />
-                <IconButton onClick={() => {
-                    setSelectedTool("rect")
-                }} activated={selectedTool === "rect"} icon={<RectangleHorizontalIcon />} ></IconButton>
-                <IconButton onClick={() => {
-                    setSelectedTool("circle")
-                }} activated={selectedTool === "circle"} icon={<Circle />}></IconButton>
-            </div>
-        </div>
+  return (
+    <div className="fixed left-1/2 top-4 z-50 -translate-x-1/2">
+      <div className="flex items-center gap-2 rounded-xl border border-border bg-card p-2 shadow-lg">
+
+        <IconButton
+          onClick={() => setSelectedTool("pencil")}
+          activated={selectedTool === "pencil"}
+          icon={<Pencil size={18} />}
+        />
+
+        <IconButton
+          onClick={() => setSelectedTool("rect")}
+          activated={selectedTool === "rect"}
+          icon={<RectangleHorizontalIcon size={18} />}
+        />
+
+        <IconButton
+          onClick={() => setSelectedTool("circle")}
+          activated={selectedTool === "circle"}
+          icon={<Circle size={18} />}
+        />
+      </div>
+    </div>
+  );
 }
+
