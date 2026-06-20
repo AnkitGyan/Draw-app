@@ -5,6 +5,7 @@ import { Middleware } from "./middleware";
 import { JWT_SECRET } from "@repo/backend-common/config";
 import { CreateRoomSchema, CreateUserSchema, SigninSchema } from "@repo/common/types";
 import { Client } from "@repo/db/client";
+import cors from "cors";
 
 interface CustomRequest extends Request {
   user?: string;
@@ -12,6 +13,7 @@ interface CustomRequest extends Request {
 
 const app = express();
 app.use(express.json());
+app.use(cors());
 
 app.get("/", (req: Request, res: Response) => {
   res.send("Hello, World!");
