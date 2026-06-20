@@ -1,14 +1,15 @@
-import { type JSX, ReactNode } from "react";
+import { ReactNode } from "react";
 
-export function Card({
-  className,
-  children,
-}: {
+interface CardProps {
   className?: string;
   children: ReactNode;
-}): JSX.Element {
+}
+
+export function Card({ className = "", children }: CardProps) {
   return (
-    <div className={className}>
+    <div
+      className={`rounded-xl border bg-card text-card-foreground shadow-sm ${className}`}
+    >
       {children}
     </div>
   );
