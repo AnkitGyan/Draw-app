@@ -34,7 +34,7 @@ export function AuthPage({
 
         localStorage.setItem("token", response.data.token);
 
-        router.push("/");
+        router.push("/dashboard");
       } else {
         await axios.post(`${HTTP_BACKEND}/signup`, {
           name,
