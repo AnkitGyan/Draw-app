@@ -12,6 +12,10 @@ export function AuthPage({isSignin}: {
                 
             </div>
 
+            {!isSignin &&  <div className="p-2">
+                <input type="text" placeholder="name"></input>
+            </div>}
+
             <div className="pt-2">
                 <button className="bg-red-200 rounded p-2" onClick={() => {
 
